@@ -1,9 +1,56 @@
 import json
+import secrets  # <-- De los profes: Para comparar credenciales de forma segura
+from typing import Dict
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pydantic import BaseModel  # <-- Para la validación estricta en el POST
 
 app = FastAPI()
+
+
 security = HTTPBasic()
+
+USUARIOS: Dict[str, str] = {
+    "admin": "redes2026",
+    "valen": "redes2026",
+    "mili": "redes2026"
+}
+
+def verificar_credenciales(
+    credenciales: HTTPBasicCredentials = Depends(security),
+) -> str:
+    pwd_correcta = USUARIOS.get(credenciales.username)
+    if not pwd_correcta or not secrets.compare_digest(
+        credenciales.password, pwd_correcta
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales incorrectas",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    return credenciales.username  
+
+
+class Cancion(BaseModel):
+    genre: str
+    artist_name: str
+    track_name: str
+    track_id: str
+    popularity: int
+    acousticness: float
+    danceability: float
+    duration_ms: int
+    energy: float
+    instrumentalness: float
+    key: str
+    liveness: float
+    loudness: float
+    mode: str
+    speechiness: float
+    tempo: float
+    time_signature: str
+    valence: float
+
 
 def cargar_datos():
     with open('spotify_150.json', 'r', encoding='utf-8') as file:
@@ -13,13 +60,6 @@ def guardar_datos(datos):
     with open('spotify_150.json', 'w', encoding='utf-8') as file:
         json.dump(datos, file, indent=4)
 
-def verificar_credenciales(credentials: HTTPBasicCredentials = Depends(security)):
-    usuario_correcto = "admin"       # Podés cambiarlo
-    password_correcto = "redes2026"  # Podés cambiarlo
-    
-    if credentials.username != usuario_correcto or credentials.password != password_correcto:
-        return {"Usuario o contraseña incorrectos"}
-    return credentials.username
 
 @app.get("/")
 def inicio():
@@ -83,3 +123,28 @@ def buscar_por_vibracion(tipo: str):
         "canciones": resultado
     }
 
+
+@app.post("/canciones")
+def agregar_cancion(cancion: Cancion, usuario: str = Depends(verificar_credenciales)):
+    datos = cargar_datos()
+    
+    for c in datos:
+        if c.get("track_id") == cancion.track_id:
+            raise HTTPException(status_code=400, detail="Esa canción ya existe en la base de datos")
+            
+    datos.append(cancion.model_dump())
+    guardar_datos(datos)
+    
+    return {"mensaje": "¡Canción agregada con éxito!", "autorizado_por": usuario, "cancion": cancion}
+
+@app.delete("/canciones/{track_id}")
+def borrar_cancion(track_id: str, usuario: str = Depends(verificar_credenciales)):
+    datos = cargar_datos()
+    
+    for i, c in enumerate(datos):
+        if c.get("track_id") == track_id:
+            cancion_borrada = datos.pop(i)
+            guardar_datos(datos)
+            return {"mensaje": "Canción eliminada", "autorizado_por": usuario, "cancion_borrada": cancion_borrada}
+            
+    raise HTTPException(status_code=404, detail="No se encontró la canción con ese ID")
