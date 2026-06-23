@@ -1,11 +1,25 @@
 import json
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 app = FastAPI()
+security = HTTPBasic()
 
 def cargar_datos():
     with open('spotify_150.json', 'r', encoding='utf-8') as file:
         return json.load(file)
+
+def guardar_datos(datos):
+    with open('spotify_150.json', 'w', encoding='utf-8') as file:
+        json.dump(datos, file, indent=4)
+
+def verificar_credenciales(credentials: HTTPBasicCredentials = Depends(security)):
+    usuario_correcto = "admin"       # Podés cambiarlo
+    password_correcto = "redes2026"  # Podés cambiarlo
+    
+    if credentials.username != usuario_correcto or credentials.password != password_correcto:
+        return {"Usuario o contraseña incorrectos"}
+    return credentials.username
 
 @app.get("/")
 def inicio():
@@ -68,3 +82,4 @@ def buscar_por_vibracion(tipo: str):
         "cantidad_encontrada": len(resultado), 
         "canciones": resultado
     }
+
