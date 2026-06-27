@@ -123,19 +123,16 @@ def buscar_por_artista(artista: str):
     return {"resultados_encontrados": len(resultado), "canciones": resultado}
 
 @app.get("/canciones/populares")
-def obtener_canciones_populares(min_popularidad: int = 15): 
+def obtener_canciones_populares(top: int = 15): 
     datos = cargar_datos()
-    resultados = []
     
-    # asume que es 15 por defecto.
-    for c in datos:
-        if int(c["popularity"]) >= min_popularidad:
-            resultados.append(c)
-
-    # sorted() y reverse=True ordenan las canciones de mayor a menor popularidad antes de devolverlas
-    resultados_ordenados = sorted(resultados, key=lambda x: int(x["popularity"]), reverse=True)
-    return {"filtro_popularidad": f"Mayor o igual a {min_popularidad}", "canciones": resultados_ordenados}
-
+    # Ordenamos todas las canciones de mayor a menor popularidad
+    resultados_ordenados = sorted(datos, key=lambda x: int(x["popularity"]), reverse=True)
+    
+    # Recortamos la lista para devolver exactamente la cantidad pedida
+    top_canciones = resultados_ordenados[:top]
+    
+    return {"filtro_aplicado": f"Top {top} más populares", "canciones": top_canciones}
 @app.get("/canciones/vibracion")
 def buscar_por_vibracion(tipo: str):
     datos = cargar_datos()
