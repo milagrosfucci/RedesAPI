@@ -2998,25 +2998,5 @@
         "tempo": 120.015,
         "time_signature": "4/4",
         "valence": 0.277
-    },
-    {
-        "genre": "Rock Nacional",
-        "artist_name": "Los Redondos",
-        "track_name": "Machete de Redes",
-        "track_id": "99FAKEtrackID999xyz",
-        "popularity": 95,
-        "acousticness": 0.012,
-        "danceability": 0.72,
-        "duration_ms": 245000,
-        "energy": 0.89,
-        "instrumentalness": 0.02,
-        "key": "A minor",
-        "liveness": 0.91,
-        "loudness": -4.5,
-        "mode": "Minor",
-        "speechiness": 0.05,
-        "tempo": 132.0,
-        "time_signature": "4/4",
-        "valence": 0.68
     }
 ]
